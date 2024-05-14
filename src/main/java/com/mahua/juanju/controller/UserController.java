@@ -3,11 +3,13 @@ package com.mahua.juanju.controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.github.benmanes.caffeine.cache.Cache;
 import com.google.gson.Gson;
 import com.mahua.juanju.Exception.BusinessException;
 import com.mahua.juanju.common.BaseResponse;
 import com.mahua.juanju.common.ErrorCode;
 import com.mahua.juanju.common.ResultUtils;
+import com.mahua.juanju.config.CacheConfig;
 import com.mahua.juanju.model.domain.User;
 import com.mahua.juanju.model.request.UserLoginRequest;
 import com.mahua.juanju.model.request.UserRegisterRequest;
@@ -35,7 +37,6 @@ import static com.mahua.juanju.constant.UserConstant.USER_LOGIN_STATUS;
  *
  * @author mahua
  */
-@CrossOrigin(origins = {"http://localhost:5173","http://localhost:8000","http://localhost:3000","http://localhost"},allowCredentials = "true")
 @RestController
 @RequestMapping("/user")
 @Slf4j
@@ -46,6 +47,9 @@ public class UserController {
 
 	@Resource
 	private RedisTemplate redisTemplate;
+
+	@Resource
+	private Cache<String,List<UserVO>> userCache;
 
 	//@RequestBody：将前端传来的JSON参数和UserRegisterRequest参数进行绑定，并自动将参数注入到UserRegisterRequest对象中
 	@PostMapping("/register")
@@ -115,9 +119,6 @@ public class UserController {
 	@GetMapping("/recommend")
 //	@Operation(summary = "用户推荐")
 	public BaseResponse<Page<UserVO>> recommendUsers( long pageSize,long pageNum,HttpServletRequest request){
-
-		String token = request.getHeader("authorization");
-		log.error(token);
 		Page<UserVO> userPageList = userService.recommend(pageNum);
 		return ResultUtils.success(userPageList);
 
@@ -131,7 +132,11 @@ public class UserController {
 			throw new BusinessException(ErrorCode.PARAMS_ERROR);
 		}
 		User loginUser = userService.getLoginUser(request);
-		return ResultUtils.success(userService.matchUsers(num,loginUser));
+		List<UserVO> userVOList = userCache.get(String.valueOf(loginUser.getId()), (key) ->
+				userService.matchUsers(num, loginUser)
+		);
+//		List<UserVO> userVOList = userService.matchUsers(num, loginUser);
+		return ResultUtils.success(userVOList);
 	}
 	@GetMapping("/search/tags")
 //	@Operation(summary = "根据标签搜索用户")
@@ -151,7 +156,6 @@ public class UserController {
 			throw new BusinessException(ErrorCode.NULL_PARAMS);
 		}
 		User loginUser = userService.getLoginUser(request);
-
 		int result = userService.updateUser(user,loginUser);
 		return ResultUtils.success(result);
 	}

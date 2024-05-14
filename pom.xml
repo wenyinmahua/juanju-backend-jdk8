@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.mahua</groupId>
     <artifactId>juanju</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.2-SNAPSHOT</version>
     <name>juanju</name>
     <description>juanju</description>
     <properties>
@@ -115,6 +115,12 @@
             <groupId>javax.xml.bind</groupId>
             <artifactId>jaxb-api</artifactId>
             <version>2.3.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+            <version>2.9.3</version>
         </dependency>
     </dependencies>
 
