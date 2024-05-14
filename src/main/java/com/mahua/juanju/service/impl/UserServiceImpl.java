@@ -421,6 +421,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 		if (finalUserList != null){
 			return finalUserList;
 		}
+		loginUser = this.getById(loginUser.getId());
 		String tags = loginUser.getTags();
 		Gson gson = new Gson();
 		List<String> tagList = gson.fromJson(tags, new TypeToken<List<String>>() {}.getType());
@@ -465,7 +466,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 		try {
 			valueOperations.set(key,finalUserList,24, TimeUnit.HOURS);
 		} catch (Exception e) {
-			log.info("redis set key err",e);
+			log.error("Redis set key err",e);
 		}
 		return finalUserList;
 
