@@ -160,7 +160,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
 
 			String searchText = teamQuery.getSearchText();
 			if (StringUtils.isNotBlank(searchText)){
-				queryWrapper.and(qw -> qw.like("name",searchText).or().like("description",searchText));
+				queryWrapper.and(qw -> qw.like("name",searchText).or().like("description",searchText).or().like("category",searchText));
 			}
 
 			String category = teamQuery.getCategory();
@@ -178,18 +178,20 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
 			if (StringUtils.isNotBlank(description)){
 				queryWrapper.like("description",description);
 			}
-			Integer status = teamQuery.getStatus();
-			TeamStatusEnum statusEnum = TeamStatusEnum.getEnumByValue(status);
-			if (statusEnum == null){
-				queryWrapper.and(wrapper -> {
-					wrapper.eq("status", TeamStatusEnum.PUBLIC.getValue());
-					wrapper.or().eq("status", TeamStatusEnum.SECRET.getValue());
-				});
-			}else {
-				queryWrapper.eq("status",statusEnum.getValue());
-			}
-			if(!isAdmin && statusEnum.equals(TeamStatusEnum.PRIVATE)) {
-				throw new BusinessException(ErrorCode.NO_AUTHORIZED);
+			if (!isAdmin){
+				Integer status = teamQuery.getStatus();
+				TeamStatusEnum statusEnum = TeamStatusEnum.getEnumByValue(status);
+				if (statusEnum == null){
+					queryWrapper.and(wrapper -> {
+						wrapper.eq("status", TeamStatusEnum.PUBLIC.getValue());
+						wrapper.or().eq("status", TeamStatusEnum.SECRET.getValue());
+					});
+				}else {
+					queryWrapper.eq("status",statusEnum.getValue());
+				}
+				if(!isAdmin && statusEnum.equals(TeamStatusEnum.PRIVATE)) {
+					throw new BusinessException(ErrorCode.NO_AUTHORIZED);
+				}
 			}
 
 			Integer maxNum = teamQuery.getMaxNum();
@@ -405,8 +407,8 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
 		}
 		// 3. 检验是不是队伍的队长
 		User loginUser = userService.getLoginUser(request);
-		if ((long)loginUser.getId() != (long)team.getUserId()){
-			throw new BusinessException(ErrorCode.NO_AUTHORIZED,"只有队长才能删除该队伍");
+		if ((long)loginUser.getId() != (long)team.getUserId() && !userService.isAdmin(request)){
+			throw new BusinessException(ErrorCode.NO_AUTHORIZED,"只有队长和管理员才能删除该队伍");
 		}
 		// 4. 移除所有已经加入队伍的关联信息
 		QueryWrapper<UserTeam> queryWrapper = new QueryWrapper<>();

@@ -4,7 +4,10 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mahua.juanju.model.domain.User;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.mahua.juanju.model.request.AdminUserRegisterRequest;
+import com.mahua.juanju.model.request.UserQueryRequest;
 import com.mahua.juanju.model.vo.UserVO;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -71,4 +74,10 @@ public interface  UserService extends IService<User> {
 	Page<UserVO> recommend(long pageNum);
 
 	void updatePassword(String oldPassword, String newPassword, String checkPassword, HttpServletRequest request);
+
+	Page<UserVO> getUserByPage(UserQueryRequest userQueryRequest);
+
+	boolean registerUserSingle(AdminUserRegisterRequest adminUserRegisterRequest);
+
+	boolean registerUserMultiple(MultipartFile file);
 }

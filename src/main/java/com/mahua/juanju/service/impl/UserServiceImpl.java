@@ -1,5 +1,7 @@
 package com.mahua.juanju.service.impl;
 
+import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.read.listener.PageReadListener;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -9,6 +11,9 @@ import com.google.gson.reflect.TypeToken;
 import com.mahua.juanju.Exception.BusinessException;
 import com.mahua.juanju.common.ErrorCode;
 import com.mahua.juanju.model.domain.User;
+import com.mahua.juanju.model.request.AdminUserRegisterRequest;
+import com.mahua.juanju.model.request.UserExcel;
+import com.mahua.juanju.model.request.UserQueryRequest;
 import com.mahua.juanju.model.vo.UserVO;
 import com.mahua.juanju.service.UserService;
 import com.mahua.juanju.mapper.UserMapper;
@@ -18,14 +23,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.math3.util.Pair;
 import org.springframework.beans.BeanUtils;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -486,7 +495,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 			userVOPage.setRecords(userVOList);
 			return userVOPage;
 		}
-		return this.getRandomUser();
+		return this.getRandomUser(count);
 	}
 
 	@Override
@@ -516,7 +525,140 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 		}
 	}
 
-	private Page<UserVO> getRandomUser() {
+	@Override
+	public Page<UserVO> getUserByPage(UserQueryRequest userQueryRequest) {
+		String username = userQueryRequest.getUsername();
+		String userAccount = userQueryRequest.getUserAccount();
+		Integer gender = userQueryRequest.getGender();
+		String phone = userQueryRequest.getPhone();
+		String email = userQueryRequest.getEmail();
+		String major = userQueryRequest.getMajor();
+		Integer userStatus = userQueryRequest.getUserStatus();
+		Integer userRole = userQueryRequest.getUserRole();
+		String stuId = userQueryRequest.getStuId();
+		String tags = userQueryRequest.getTags();
+		String profile = userQueryRequest.getProfile();
+
+
+		if (userQueryRequest == null){
+			throw new BusinessException(ErrorCode.PARAMS_ERROR);
+		}
+		Long pageSize = userQueryRequest.getPageSize();
+		Long current = userQueryRequest.getCurrent();
+		QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+		if (StringUtils.isNotBlank(username)) {
+			queryWrapper.like("username", username);
+		}
+		if (StringUtils.isNotBlank(userAccount)) {
+			queryWrapper.like("user_account", userAccount);
+		}
+		if (gender != null) {
+			queryWrapper.eq("gender", gender);
+		}
+		if (StringUtils.isNotBlank(phone)) {
+			queryWrapper.eq("phone", phone);
+		}
+		if (StringUtils.isNotBlank(email)) {
+			queryWrapper.eq("email", email);
+		}
+		if (StringUtils.isNotBlank(major)) {
+			queryWrapper.like("major", major);
+		}
+		if (userStatus != null) {
+			queryWrapper.eq("user_status", userStatus);
+		}
+		if (userRole != null) {
+			queryWrapper.eq("user_Role", userRole);
+		}
+		if (StringUtils.isNotBlank(stuId)){
+			queryWrapper.eq("stu_id", stuId);
+		}
+		if (StringUtils.isNotBlank(tags)) {
+			// 假设tags是以逗号分隔的字符串，需要转换为集合处理或使用模糊查询
+			queryWrapper.like("tags", tags);
+		}
+		if (StringUtils.isNotBlank(profile)) {
+			queryWrapper.like("profile", profile);
+		}
+		Page<User> pageUser = this.page(new Page<>(current, pageSize), queryWrapper);
+		List<User> pageUserRecords = pageUser.getRecords();
+		List<UserVO> pageUserVORecords = pageUserRecords.stream()
+				.map(user -> {
+					UserVO userVO = new UserVO();
+					BeanUtils.copyProperties(user,userVO);
+					return userVO;
+				}).collect(Collectors.toList());
+		long total = pageUser.getTotal();
+		Page<UserVO> userVOPage = new Page<>();
+		userVOPage.setRecords(pageUserVORecords);
+		userVOPage.setTotal(total);
+		return userVOPage;
+	}
+
+	@Override
+	public boolean registerUserSingle(AdminUserRegisterRequest adminUserRegisterRequest) {
+		if (adminUserRegisterRequest == null){
+			throw new BusinessException(ErrorCode.PARAMS_ERROR);
+		}
+		String userAccount = adminUserRegisterRequest.getUserAccount();
+		String username = adminUserRegisterRequest.getUsername();
+		String stuId = adminUserRegisterRequest.getStuId();
+		if(StringUtils.isAnyEmpty(userAccount,username,stuId)){
+			throw new BusinessException(ErrorCode.PARAMS_ERROR,"用户账号、用户姓名、用户学号不能为空");
+		}
+		User user = new User();
+		user.setUserAccount(userAccount);
+		user.setUsername(username);
+		user.setStuId(stuId);
+		user.setUserPassword(DigestUtils.md5DigestAsHex((SALT+stuId).getBytes()));
+		boolean save = false;
+		try {
+			save = this.save(user);
+		} catch (DuplicateKeyException e) {
+			throw new BusinessException(ErrorCode.STU_ID_EXIST,"学号或账号已存在");
+		}
+		return save;
+	}
+
+	@Override
+	public boolean registerUserMultiple(MultipartFile file) {
+		try {
+			if (file == null) {
+				throw new BusinessException(ErrorCode.PARAMS_ERROR, "请选择上传文件");
+			}
+			String originalFilename = file.getOriginalFilename();
+			if (originalFilename == null || (!originalFilename.endsWith(".xls") && !originalFilename.endsWith(".xlsx"))) {
+				throw new BusinessException(ErrorCode.PARAMS_ERROR, "文件格式错误");
+			}
+
+			try (InputStream inputStream = file.getInputStream()) {
+				EasyExcel.read(inputStream, UserExcel.class, new PageReadListener<UserExcel>(registerUserList -> {
+					for (UserExcel userExcel : registerUserList) {
+						User user = new User();
+						user.setUserAccount(userExcel.getStuId());
+						user.setUsername(userExcel.getUsername());
+						user.setStuId(userExcel.getStuId());
+						user.setUserPassword(DigestUtils.md5DigestAsHex((SALT + userExcel.getStuId()).getBytes()));
+						boolean save = false;
+						try {
+							save = this.save(user);
+						} catch (DuplicateKeyException e) {
+							log.error("保存用户时出现重复键异常: {}", user.getUserAccount(), e);
+						}
+						System.out.println(save);
+					}
+				})).sheet().doRead();
+			}
+
+			return true;
+		} catch (IOException e) {
+			// 处理解析文件时可能发生的IO异常
+			log.error("读取Excel文件时发生错误", e);
+			throw new BusinessException(ErrorCode.SYSTEM_ERROR, "文件读取失败");
+		}
+	}
+
+	private Page<UserVO> getRandomUser(long count) {
 		List<User> randomUserList = userMapper.getRandomUser();
 		List<UserVO> userVOList = randomUserList.stream().map(user -> {
 			UserVO userVO = new UserVO();
@@ -525,11 +667,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 		}).collect(Collectors.toList());
 		Page<UserVO> userVOPage= new Page<>();
 		userVOPage.setRecords(userVOList);
+		userVOPage.setTotal(count);
 		return userVOPage;
 	}
 
 }
-
-
-
 

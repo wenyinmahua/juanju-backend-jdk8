@@ -1,4 +1,4 @@
-package com.mahua.juanju.model.vo;
+package com.mahua.juanju.model.request;
 
 import lombok.Data;
 
@@ -10,7 +10,7 @@ import java.io.Serializable;
  *
  */
 @Data
-public class UserVO implements Serializable {
+public class UserQueryRequest extends PageRequest implements Serializable {
     private static final long serialVersionUID = 8696175249543933002L;
 
     private Long id;

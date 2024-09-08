@@ -11,9 +11,7 @@ import com.mahua.juanju.common.ErrorCode;
 import com.mahua.juanju.common.ResultUtils;
 import com.mahua.juanju.config.CacheConfig;
 import com.mahua.juanju.model.domain.User;
-import com.mahua.juanju.model.request.UserLoginRequest;
-import com.mahua.juanju.model.request.UserRegisterRequest;
-import com.mahua.juanju.model.request.UserUpdatePasswordRequest;
+import com.mahua.juanju.model.request.*;
 import com.mahua.juanju.model.vo.UserVO;
 import com.mahua.juanju.service.UserService;
 
@@ -22,6 +20,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -50,8 +49,6 @@ public class UserController {
 
 	@Resource
 	private Cache<String,List<UserVO>> userCache;
-
-	//@RequestBody：将前端传来的JSON参数和UserRegisterRequest参数进行绑定，并自动将参数注入到UserRegisterRequest对象中
 	@PostMapping("/register")
 //	@Operation(summary = "用户注册")
 	public BaseResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest){
@@ -118,7 +115,7 @@ public class UserController {
 
 	@GetMapping("/recommend")
 //	@Operation(summary = "用户推荐")
-	public BaseResponse<Page<UserVO>> recommendUsers( long pageSize,long pageNum,HttpServletRequest request){
+	public BaseResponse<Page<UserVO>> recommendUsers(long pageNum){
 		Page<UserVO> userPageList = userService.recommend(pageNum);
 		return ResultUtils.success(userPageList);
 
@@ -167,13 +164,12 @@ public class UserController {
 		String newPassword = userUpdatePasswordRequest.getNewPassword();
 		String checkPassword = userUpdatePasswordRequest.getCheckPassword();
 		userService.updatePassword(oldPassword, newPassword, checkPassword,request);
-
 		return ResultUtils.success("修改密码成功");
 	}
 
 	@PostMapping("/delete")
 //	@Operation(summary = "用户删除")
-	public BaseResponse<Boolean> delete(@RequestBody long id,HttpServletRequest request){
+	public BaseResponse<Boolean> delete(long id,HttpServletRequest request){
 		if(!userService.isAdmin(request)){
 			throw new BusinessException(ErrorCode.NO_AUTHORIZED);
 		}
@@ -209,5 +205,23 @@ public class UserController {
 		User user = userService.getById(userId);
 		User safetyUser = userService.getSafetyUser(user);
 		return ResultUtils.success(safetyUser);
+	}
+
+	@GetMapping("/list")
+	public BaseResponse<Page<UserVO>> getUserByPage(UserQueryRequest userQueryRequest){
+		Page<UserVO> userVOPage = userService.getUserByPage(userQueryRequest);
+		return ResultUtils.success(userVOPage);
+	}
+
+	@PostMapping("/register/user/single")
+	public BaseResponse<Boolean> registerUserSingle(@RequestBody AdminUserRegisterRequest adminUserRegisterRequest, HttpServletRequest request){
+		boolean result = userService.registerUserSingle(adminUserRegisterRequest);
+		return ResultUtils.success(result);
+	}
+
+	@PostMapping("/register/user/multiple")
+	public BaseResponse<Boolean> registerUserMultiple(MultipartFile file){
+		boolean result = userService.registerUserMultiple(file);
+		return ResultUtils.success(result);
 	}
 }
