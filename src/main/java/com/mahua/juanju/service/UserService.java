@@ -2,6 +2,7 @@ package com.mahua.juanju.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.mahua.juanju.common.BaseResponse;
 import com.mahua.juanju.model.domain.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.mahua.juanju.model.request.AdminUserRegisterRequest;
@@ -80,4 +81,6 @@ public interface  UserService extends IService<User> {
 	boolean registerUserSingle(AdminUserRegisterRequest adminUserRegisterRequest);
 
 	boolean registerUserMultiple(MultipartFile file);
+
+	UserVO getUserInfoByUserAccount(String userAccount);
 }

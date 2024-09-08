@@ -544,7 +544,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 			throw new BusinessException(ErrorCode.PARAMS_ERROR);
 		}
 		Long pageSize = userQueryRequest.getPageSize();
-		Long current = userQueryRequest.getPageNum();
+		Long current = userQueryRequest.getCurrent();
 		QueryWrapper<User> queryWrapper = new QueryWrapper<>();
 		if (StringUtils.isNotBlank(username)) {
 			queryWrapper.like("username", username);
@@ -656,6 +656,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 			log.error("读取Excel文件时发生错误", e);
 			throw new BusinessException(ErrorCode.SYSTEM_ERROR, "文件读取失败");
 		}
+	}
+
+	@Override
+	public UserVO getUserInfoByUserAccount(String userAccount) {
+		if (StringUtils.isBlank(userAccount)){
+			throw new BusinessException(ErrorCode.PARAMS_ERROR,"用户账号不能为空");
+		}
+		QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+		queryWrapper.eq("user_account",userAccount);
+		User user = this.getOne(queryWrapper);
+		UserVO userVO = new UserVO();
+		BeanUtils.copyProperties(user,userVO);
+		return userVO;
 	}
 
 	private Page<UserVO> getRandomUser(long count) {

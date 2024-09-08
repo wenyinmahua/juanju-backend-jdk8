@@ -7,5 +7,5 @@ import java.io.Serializable;
 @Data
 public class PageRequest implements Serializable {
 	private Long pageSize;
-	private Long pageNum;
+	private Long current;
 }

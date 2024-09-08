@@ -9,7 +9,6 @@ import com.mahua.juanju.Exception.BusinessException;
 import com.mahua.juanju.common.BaseResponse;
 import com.mahua.juanju.common.ErrorCode;
 import com.mahua.juanju.common.ResultUtils;
-import com.mahua.juanju.config.CacheConfig;
 import com.mahua.juanju.model.domain.User;
 import com.mahua.juanju.model.request.*;
 import com.mahua.juanju.model.vo.UserVO;
@@ -24,12 +23,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import javax.websocket.server.PathParam;
 import java.util.List;
 import java.util.stream.Collectors;
 
 
 import static com.mahua.juanju.constant.RedisConstants.USER_LOGIN_KEY;
-import static com.mahua.juanju.constant.UserConstant.USER_LOGIN_STATUS;
 
 /**
  * 用户接口
@@ -223,5 +222,10 @@ public class UserController {
 	public BaseResponse<Boolean> registerUserMultiple(MultipartFile file){
 		boolean result = userService.registerUserMultiple(file);
 		return ResultUtils.success(result);
+	}
+
+	@GetMapping("/info")
+	public BaseResponse<UserVO> getUserInfoByUserAccount(@RequestParam("userAccount") String userAccount){
+		return ResultUtils.success(userService.getUserInfoByUserAccount(userAccount));
 	}
 }
