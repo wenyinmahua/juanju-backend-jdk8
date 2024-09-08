@@ -1,3 +1,4 @@
+create database if not exists juanju;
 use juanju;
 
 create table user_team

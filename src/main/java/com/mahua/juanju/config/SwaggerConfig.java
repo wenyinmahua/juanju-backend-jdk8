@@ -50,13 +50,12 @@ public class SwaggerConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("卷聚匹配系统")
+                        .title("聚友阁")
                         .version("1.0")
-
-                        .description( "卷聚匹配系统")
-                        .termsOfService("http://github.com/wenyinmahua/juanju-baclend-jdk8")
+                        .description( "聚友阁")
+                        .termsOfService("http://github.com/wenyinmahua/juanju-backend-jdk8")
                         .license(new License().name("Apache 2.0")
-                                .url("http://github.com/wenyinmahua/juanju-baclend-jdk8"))
+                                .url("http://github.com/wenyinmahua/juanju-backend-jdk8"))
                         ).addSecurityItem(new SecurityRequirement().addList(HttpHeaders.AUTHORIZATION))
                 .components(new Components().addSecuritySchemes(HttpHeaders.AUTHORIZATION,new SecurityScheme()
                         .name(HttpHeaders.AUTHORIZATION).type(SecurityScheme.Type.HTTP).scheme("bearer")));

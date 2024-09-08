@@ -544,7 +544,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 			throw new BusinessException(ErrorCode.PARAMS_ERROR);
 		}
 		Long pageSize = userQueryRequest.getPageSize();
-		Long current = userQueryRequest.getCurrent();
+		Long current = userQueryRequest.getPageNum();
 		QueryWrapper<User> queryWrapper = new QueryWrapper<>();
 		if (StringUtils.isNotBlank(username)) {
 			queryWrapper.like("username", username);
