@@ -83,4 +83,6 @@ public interface  UserService extends IService<User> {
 	boolean registerUserMultiple(MultipartFile file);
 
 	UserVO getUserInfoByUserAccount(String userAccount);
+
+	String getUserNameById(Long createUserId);
 }

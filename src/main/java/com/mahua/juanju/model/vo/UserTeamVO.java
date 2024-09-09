@@ -10,7 +10,7 @@ import java.util.Date;
  * 队伍和用户的信息封装类（脱敏），返回给前端
  */
 @Data
-public class TeamUserVO implements Serializable {
+public class UserTeamVO implements Serializable {
 
 	private static final long serialVersionUID = 49479662056374828L;
 
@@ -41,6 +41,7 @@ public class TeamUserVO implements Serializable {
 	/**
 	 * 队伍过期时间
 	 */
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	private Date expireTime;
 
 	/**
@@ -70,15 +71,15 @@ public class TeamUserVO implements Serializable {
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	private Date updateTime;
 	/**
-	 * 创建人用户列表
+	 * 创建人
 	 */
-	UserVO createUser;
+	String createUser;
 
 	/**
 	 * 已加入队伍的人数
 	 */
 
-	int hasJoinNum;
+	Long hasJoinNum;
 	private boolean hasJoin = false;
 
 }

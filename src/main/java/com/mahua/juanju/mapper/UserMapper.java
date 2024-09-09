@@ -3,6 +3,7 @@ package com.mahua.juanju.mapper;
 import com.mahua.juanju.model.domain.User;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 
@@ -16,6 +17,9 @@ import java.util.List;
 public interface UserMapper extends BaseMapper<User> {
 
 	List<User> getRandomUser();
+
+	@Select("select username from user where id = #{createUserId}")
+	String getUserNameById(Long createUserId);
 }
 
 

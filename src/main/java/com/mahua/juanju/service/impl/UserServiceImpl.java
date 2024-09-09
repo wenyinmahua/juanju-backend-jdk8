@@ -671,6 +671,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 		return userVO;
 	}
 
+	@Override
+	public String getUserNameById(Long createUserId) {
+		return userMapper.getUserNameById(createUserId);
+	}
+
 	private Page<UserVO> getRandomUser(long count) {
 		List<User> randomUserList = userMapper.getRandomUser();
 		List<UserVO> userVOList = randomUserList.stream().map(user -> {

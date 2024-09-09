@@ -12,8 +12,7 @@ import com.mahua.juanju.model.domain.UserTeam;
 import com.mahua.juanju.model.dto.TeamQuery;
 import com.mahua.juanju.model.request.TeamJoinRequest;
 import com.mahua.juanju.model.request.TeamUpdateRequest;
-import com.mahua.juanju.model.vo.TeamUserVO;
-import com.mahua.juanju.model.vo.UserVO;
+import com.mahua.juanju.model.vo.UserTeamVO;
 import com.mahua.juanju.service.TeamService;
 import com.mahua.juanju.mapper.TeamMapper;
 import com.mahua.juanju.service.UserService;
@@ -145,7 +144,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
 	}
 
 	@Override
-	public Page<TeamUserVO> listTeams(TeamQuery teamQuery,boolean isAdmin) {
+	public Page<UserTeamVO> listTeams(TeamQuery teamQuery, boolean isAdmin) {
 		QueryWrapper<Team> queryWrapper = new QueryWrapper<>();
 		if (teamQuery != null){
 			Long userId = teamQuery.getUserId();
@@ -206,7 +205,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
 		if (CollectionUtils.isEmpty(teamList)){
 			return new Page<>();
 		}
-		List<TeamUserVO> teamUserVOList = new ArrayList<>();
+		List<UserTeamVO> userTeamVOList = new ArrayList<>();
 		// 关联查询创建人的用户信息
 
 		for(Team team : teamList){
@@ -215,23 +214,21 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
 				continue;
 			}
 			User user = userService.getById(userId);
-			TeamUserVO teamUserVO = new TeamUserVO();
-			BeanUtils.copyProperties(team,teamUserVO);
+			UserTeamVO userTeamVO = new UserTeamVO();
+			BeanUtils.copyProperties(team, userTeamVO);
 			// 用户脱敏
 			if(user != null){
-				UserVO userVO = new UserVO();
-				BeanUtils.copyProperties(user,userVO);
-				teamUserVO.setCreateUser(userVO);
+				userTeamVO.setCreateUser(user.getUsername());
 			}
 			QueryWrapper<UserTeam> teamHasJoinNumQueryWrapper = new QueryWrapper<>();
 			teamHasJoinNumQueryWrapper.eq("team_id",team.getId());
-			teamUserVO.setHasJoinNum((int) userTeamService.count(teamHasJoinNumQueryWrapper));
+			userTeamVO.setHasJoinNum( userTeamService.count(teamHasJoinNumQueryWrapper));
 
-			teamUserVOList.add(teamUserVO);
+			userTeamVOList.add(userTeamVO);
 		}
-		Page<TeamUserVO> teamUserVOPage = new Page<>();
-		teamUserVOPage.setRecords(teamUserVOList);
-		teamUserVOPage.setTotal(teamUserVOList.size());
+		Page<UserTeamVO> teamUserVOPage = new Page<>();
+		teamUserVOPage.setRecords(userTeamVOList);
+		teamUserVOPage.setTotal(userTeamVOList.size());
 
 		return teamUserVOPage;
 	}
@@ -416,6 +413,28 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
 		userTeamService.remove(queryWrapper);
 		// 5. 删除队伍
 		return this.removeById(id);
+	}
+
+	@Override
+	public UserTeamVO getTeamInfoById(Long teamId, HttpServletRequest request) {
+		Team team = this.getById(teamId);
+		if (team == null){
+			throw new BusinessException(ErrorCode.PARAMS_ERROR,"没有发现此队伍");
+		}
+		UserTeamVO userTeamVO = new UserTeamVO();
+		BeanUtils.copyProperties(team,userTeamVO);
+		Long createUserId = team.getUserId();
+		String createUser = userService.getUserNameById(createUserId);
+		userTeamVO.setCreateUser(createUser);
+		Long loginUserId = userService.getLoginUser(request).getId();
+		QueryWrapper<UserTeam> userTeamQueryWrapper = new QueryWrapper<>();
+		userTeamQueryWrapper.eq("team_id",teamId);
+		userTeamVO.setHasJoinNum(userTeamService.count(userTeamQueryWrapper));
+		userTeamQueryWrapper.eq("user_id",loginUserId);
+		UserTeam userTeam = userTeamService.getOne(userTeamQueryWrapper);
+		userTeamVO.setHasJoin(userTeam != null);
+
+		return userTeamVO;
 	}
 
 

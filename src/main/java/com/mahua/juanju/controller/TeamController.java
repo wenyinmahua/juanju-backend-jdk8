@@ -13,7 +13,7 @@ import com.mahua.juanju.model.dto.TeamQuery;
 import com.mahua.juanju.model.request.TeamJoinRequest;
 import com.mahua.juanju.model.request.TeamRequest;
 import com.mahua.juanju.model.request.TeamUpdateRequest;
-import com.mahua.juanju.model.vo.TeamUserVO;
+import com.mahua.juanju.model.vo.UserTeamVO;
 import com.mahua.juanju.service.TeamService;
 import com.mahua.juanju.service.UserService;
 import com.mahua.juanju.service.UserTeamService;
@@ -91,7 +91,7 @@ public class TeamController {
 
 //	@Operation(summary = "分页查询队伍")
 	@GetMapping("/list")
-	public BaseResponse<Page<TeamUserVO>> teamList( TeamQuery teamQuery, HttpServletRequest request){
+	public BaseResponse<Page<UserTeamVO>> teamList(TeamQuery teamQuery, HttpServletRequest request){
 		if (teamQuery == null ){
 			throw new BusinessException(ErrorCode.PARAMS_ERROR);
 		}
@@ -100,14 +100,14 @@ public class TeamController {
 
 		}
 		boolean isAdmin = userService.isAdmin(request);
-		Page<TeamUserVO> teamList = teamService.listTeams(teamQuery,isAdmin);
+		Page<UserTeamVO> teamList = teamService.listTeams(teamQuery,isAdmin);
 		if (teamList == null){
 			throw new BusinessException(ErrorCode.SYSTEM_ERROR,"获取队伍列表错误");
 		}
 		if (teamList.getRecords().size() == 0){
 			return ResultUtils.success(null,"暂无队伍列表");
 		}
-		List<Long> teamIdList = teamList.getRecords().stream().map(TeamUserVO::getId).collect(Collectors.toList());
+		List<Long> teamIdList = teamList.getRecords().stream().map(UserTeamVO::getId).collect(Collectors.toList());
 		QueryWrapper<UserTeam> queryWrapper = new QueryWrapper();
 		try{
 			User loginUser = userService.getLoginUser(request);
@@ -120,18 +120,16 @@ public class TeamController {
 				boolean hasJoin = hasJoinTeamIdSet.contains(team.getId());
 				team.setHasJoin(hasJoin);
 			});
-		}catch (Exception e){}
-/*		QueryWrapper<UserTeam> userTeamJoinQueryWrapper = new QueryWrapper<>();
-		userTeamJoinQueryWrapper.in("team_id",teamIdList);
-		List<UserTeam> userTeamList = userTeamService.list(userTeamJoinQueryWrapper);
-		Map<Long,List<UserTeam>> teamIdUserTeamList = userTeamList.stream().collect(Collectors.groupingBy(UserTeam::getTeamId));
-		teamList.getRecords().forEach(team->team.setHasJoinNum(teamIdUserTeamList.getOrDefault(team.getId(),new ArrayList<>()).size()));*/
+		}catch (Exception e){
+			log.error("查询队伍失败");
+		}
+
 		return ResultUtils.success(teamList);
 	}
 
 //	@Operation(summary = "获取我创建的队伍")
 	@GetMapping("/list/my/create")
-	public BaseResponse<Page<TeamUserVO>> myCreateTeamList(TeamQuery teamQuery, HttpServletRequest request){
+	public BaseResponse<Page<UserTeamVO>> myCreateTeamList(TeamQuery teamQuery, HttpServletRequest request){
 		if (teamQuery == null ){
 			throw new BusinessException(ErrorCode.PARAMS_ERROR);
 		}
@@ -142,7 +140,7 @@ public class TeamController {
 
 //	@Operation(summary = "获取我加入的队伍")
 	@GetMapping("/list/my/join")
-	public BaseResponse<Page<TeamUserVO>> myJoinTeamList(TeamQuery teamQuery, HttpServletRequest request){
+	public BaseResponse<Page<UserTeamVO>> myJoinTeamList(TeamQuery teamQuery, HttpServletRequest request){
 		if (teamQuery == null ){
 			throw new BusinessException(ErrorCode.PARAMS_ERROR);
 		}
@@ -156,13 +154,13 @@ public class TeamController {
 		return getPageBaseResponse(teamQuery);
 	}
 
-	private BaseResponse<Page<TeamUserVO>> getPageBaseResponse(@RequestBody TeamQuery teamQuery) {
-		Page<TeamUserVO> teamList = teamService.listTeams(teamQuery,true);
+	private BaseResponse<Page<UserTeamVO>> getPageBaseResponse(@RequestBody TeamQuery teamQuery) {
+		Page<UserTeamVO> teamList = teamService.listTeams(teamQuery,true);
 		if (teamList == null){
 			throw new BusinessException(ErrorCode.SYSTEM_ERROR,"获取队伍列表错误");
 		}
-		for(TeamUserVO teamUserVO : teamList.getRecords()){
-			teamUserVO.setHasJoin(true);
+		for(UserTeamVO userTeamVO : teamList.getRecords()){
+			userTeamVO.setHasJoin(true);
 		}
 		return ResultUtils.success(teamList);
 	}
@@ -195,6 +193,13 @@ public class TeamController {
 		}
 		return ResultUtils.success(true);
 	}
+
+	@GetMapping("/info")
+	public BaseResponse<UserTeamVO> getTeamInfoById(@RequestParam("id")Long id,HttpServletRequest request){
+		UserTeamVO userTeamVO = teamService.getTeamInfoById(id,request);
+		return ResultUtils.success(userTeamVO);
+	}
+
 
 
 

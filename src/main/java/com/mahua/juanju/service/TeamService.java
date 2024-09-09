@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.mahua.juanju.model.dto.TeamQuery;
 import com.mahua.juanju.model.request.TeamJoinRequest;
 import com.mahua.juanju.model.request.TeamUpdateRequest;
-import com.mahua.juanju.model.vo.TeamUserVO;
+import com.mahua.juanju.model.vo.UserTeamVO;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -20,7 +20,7 @@ public interface TeamService extends IService<Team> {
 
 	long addTeam(Team team, User loginUser);
 
-	Page<TeamUserVO> listTeams(TeamQuery teamQuery,boolean isAdmin);
+	Page<UserTeamVO> listTeams(TeamQuery teamQuery, boolean isAdmin);
 
 	/**
 	 * 更新队伍
@@ -54,4 +54,6 @@ public interface TeamService extends IService<Team> {
 	 * @return
 	 */
 	boolean deleteTeam(long id, HttpServletRequest request);
+
+	UserTeamVO getTeamInfoById(Long id, HttpServletRequest request);
 }
