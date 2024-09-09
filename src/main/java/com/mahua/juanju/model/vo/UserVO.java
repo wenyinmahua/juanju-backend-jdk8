@@ -3,6 +3,7 @@ package com.mahua.juanju.model.vo;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.Date;
 
 
 /**
@@ -79,5 +80,7 @@ public class UserVO implements Serializable {
      * 个人简介
      */
     private String profile;
+
+    private Date updateTime;
 
 }
