@@ -1,6 +1,4 @@
-# juanju => 卷聚 --->卷王聚集地
-# 卷聚匹配系统
-
+# 聚友阁
 介绍：帮助大家找到志同道合的朋友，移动端H5页面（尽量兼容PC端）
 
 # 需求分析
@@ -279,9 +277,9 @@ Caffeine 的默认驱逐策略是基于容量的 LRU（Least Recently Used，最
           @Resource
           private Cache<String,List<UserVO>> userCache;
    ```
-
+   
    2. 使用 userCache 查询缓存
-
+   
    ```java
            List<UserVO> userVOList = userCache.get(String.valueOf(loginUser.getId()), (key) ->
              userService.matchUsers(num, loginUser));
