@@ -13,17 +13,17 @@
     4. 邀请其他人
 4. 允许用户去修改标签
 5. 匹配队友（找相同标签的队友）
-    - 编辑距离算法
+    - 排序 + 编辑距离算法
 6. 随机推荐 10 个用户
 
 # 技术栈
 
 ### 后端
 
-1. Java编程语言 + SpringBoot框架
+1. Java 编程语言 + SpringBoot 框架
 2. SpringMVC+MyBatis+MyBatis-Plus（提高开发效率）
-3. MySQL数据库
-4. Swagger+Knifej接口文档
+3. MySQL 数据库
+4. Swagger+Knifej 接口文档
 
 
 # 组队
@@ -273,16 +273,13 @@ Caffeine 的默认驱逐策略是基于容量的 LRU（Least Recently Used，最
 
    1. 注入 userCache
 
-      ```java
-          @Resource
-          private Cache<String,List<UserVO>> userCache;
+   ```java
+   @Resource
+   private Cache<String,List<UserVO>> userCache;
    ```
    
    2. 使用 userCache 查询缓存
    
    ```java
-           List<UserVO> userVOList = userCache.get(String.valueOf(loginUser.getId()), (key) ->
-             userService.matchUsers(num, loginUser));
-```
-
-
+   List<UserVO> userVOList = userCache.get(String.valueOf(loginUser.getId()), (key) ->
+   	userService.matchUsers(num, loginUser));
