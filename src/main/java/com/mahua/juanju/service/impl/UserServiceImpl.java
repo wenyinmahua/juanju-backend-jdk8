@@ -127,11 +127,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 		//2.从数据库中取出用户的账户信息
 		User user = getUserInDataBase(userAccount, userPassword);
 		//3.记录用户的登录态
-		String token = getUserLoginState(request, user);
+		String token = getUserLoginToken(request, user);
 		return token;
 	}
 
-	private String getUserLoginState(HttpServletRequest request, User user) {
+	private String getUserLoginToken(HttpServletRequest request, User user) {
 		User safetyUser = this.getSafetyUser(user);
 		String token = UUID.randomUUID().toString();
 		Gson gson = new Gson();
